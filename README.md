@@ -171,20 +171,21 @@ python obj2vol.py model.obj [-o out.vol] [--name shapename]
 Builds a Tribes interior `.vol` (containing `.dis` + `.dig` + `.dml`) from an OBJ.
 Geometry, UVs and materials **round-trip cleanly back through `dis2obj.py`**.
 
-By itself `obj2vol.py` writes an **empty BSP** (fine for round-tripping, but the
-live engine needs a real BSP tree to render/cull). The real BSP comes from the
-engine's own compiler via the `objbuild` harness (built from this project with
-`build-objbuild.ps1` — it ports `itrbsp`/`itr3dmimport`/`itrportal` to wasm and
-runs `ITRBSPBuild::buildTree` + `ITRPortal::buildPVS`). Full pipeline:
-
 ```
-node build\objbuild.js  model.obj  model-00.dig      # OBJ -> .dig (real BSP+PVS)
-python obj2vol.py model.obj --dig model-00.dig -o model.vol   # pack the .vol
+python obj2vol.py model.obj [-o out.vol] [--name shapename]
 ```
 
-The resulting `.dig` carries real node/leaf/PVS data (verified: a cube builds 6
-nodes / 50 leaves / 3 portals) and round-trips through `dis2obj`. Without `--dig`
-you get the empty-BSP fallback.
+`obj2vol.py` is included here for convenient **geometry round-tripping** — on its
+own it writes an **empty BSP**, which is fine for re-importing through `dis2obj.py`
+but won't render/collide a complex interior in the live engine (that needs a real
+BSP tree).
+
+👉 **For the full OBJ → in-game interior pipeline** — real BSP/PVS/lighting, walk-in
+buildings, voxelizing, texturing — use the companion repo, which ships a **prebuilt**
+`objbuild.js` (no engine build needed):
+**[Tribes-OBJ-to-DIS-Converter](https://github.com/jcmolnar/Tribes-OBJ-to-DIS-Converter)**.
+There you run `node objbuild.js model.obj model-00.dig` to get a real `.dig`, then
+`python obj2vol.py model.obj --dig model-00.dig -o model.vol` to pack it.
 
 ---
 
